@@ -83,6 +83,7 @@ La tienda cuenta con **un solo usuario y un solo acceso**. Se necesita poder:
 ## 7. Fuera de Alcance
 
 - Tienda virtual para los clientes, con opción a realizar la compra.
+- Módulo de facturación (emisión de facturas, comprobantes fiscales, integración con AFIP/organismos impositivos y gestión de datos fiscales de clientes).
 
 ---
 
