@@ -2,14 +2,16 @@
 
 ## Propósito
 Software de gestión de stock y precios para una librería (un solo usuario).
-ABM de libros, manejo de stock, actualización de precios individual y masiva por Excel, y búsqueda por nombre/editorial o por foto.
+ABM de libros, manejo de stock, alta masiva y actualización de precios individual y masiva por Excel, y búsqueda por nombre/editorial o por foto.
 
 ## Stack
 - Next.js (App Router) — aplicación full-stack: UI + API Routes / Server Actions
 - TypeScript
 - React
 - SQLite (base embebida, un único archivo `.db`, sin servidor) — vía `better-sqlite3`
-- Excel: carga masiva con columnas *libro* y *precio* (librería `xlsx` o similar)
+- Excel (librería `xlsx` o similar), dos flujos separados:
+  - Actualización de precios: columnas *libro* y *precio*
+  - Alta masiva de libros: columnas *libro*, *editorial*, *stock* y *precio*
 - Búsqueda por foto: librería local (aún sin definir cuál)
 - Tests: Vitest
 
