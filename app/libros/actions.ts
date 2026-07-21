@@ -2,10 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
-import { crearLibro, ErrorValidacion, type NuevoLibro } from "@/lib/libros";
+import {
+  crearLibro,
+  modificarPrecio,
+  ErrorValidacion,
+  ErrorNoEncontrado,
+  type NuevoLibro,
+} from "@/lib/libros";
 
 export type ResultadoAlta =
   | { ok: true; id: number }
+  | { ok: false; errores: string[] };
+
+export type ResultadoEdicion =
+  | { ok: true }
   | { ok: false; errores: string[] };
 
 /** Convierte un campo de formulario a número; vacío o ausente → NaN (inválido). */
@@ -39,6 +49,32 @@ export async function altaLibroAction(
   } catch (e) {
     if (e instanceof ErrorValidacion) {
       return { ok: false, errores: e.errores };
+    }
+    throw e;
+  }
+}
+
+/**
+ * Server action de edición de precio (RF-02 / RF-14). Adaptador fino sobre
+ * `modificarPrecio`. Pensada para usarse con `useActionState`.
+ */
+export async function editarPrecioAction(
+  _prev: ResultadoEdicion | null,
+  formData: FormData,
+): Promise<ResultadoEdicion> {
+  const libroId = aNumero(formData.get("libroId"));
+  const precio = aNumero(formData.get("precio"));
+
+  try {
+    modificarPrecio(getDb(), libroId, precio);
+    revalidatePath("/libros");
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof ErrorValidacion) {
+      return { ok: false, errores: e.errores };
+    }
+    if (e instanceof ErrorNoEncontrado) {
+      return { ok: false, errores: [e.message] };
     }
     throw e;
   }

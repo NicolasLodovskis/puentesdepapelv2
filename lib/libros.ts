@@ -32,6 +32,20 @@ export class ErrorValidacion extends Error {
   }
 }
 
+/** El libro referenciado no existe. */
+export class ErrorNoEncontrado extends Error {
+  constructor(mensaje: string) {
+    super(mensaje);
+    this.name = "ErrorNoEncontrado";
+  }
+}
+
+/** Orígenes posibles de un cambio de precio (RF-14). */
+export type OrigenPrecio =
+  | "edición manual"
+  | "actualización masiva por Excel"
+  | "alta por Excel";
+
 /**
  * Valida los datos de alta (AC-01): título y editorial no vacíos, stock entero
  * ≥ 0, precio > 0. Devuelve la lista de errores (vacía si es válido).
@@ -76,6 +90,53 @@ export function listarLibros(db: Database.Database): Libro[] {
       "SELECT * FROM libros WHERE archivado = 0 ORDER BY creado_en DESC, id DESC",
     )
     .all() as Libro[];
+}
+
+/** Valida un precio: número finito > 0. Devuelve la lista de errores. */
+export function validarPrecio(precio: number): string[] {
+  if (typeof precio !== "number" || !Number.isFinite(precio) || precio <= 0) {
+    return ["El precio debe ser un número mayor a 0."];
+  }
+  return [];
+}
+
+/**
+ * Modifica el precio de un libro (RF-02) y registra el cambio en el historial
+ * de precio (RF-14): fecha, precio anterior, precio nuevo y origen. La
+ * actualización y el registro se hacen en una transacción (AC-02).
+ *
+ * Lanza `ErrorValidacion` si el precio es inválido y `ErrorNoEncontrado` si el
+ * libro no existe (en ambos casos no persiste nada).
+ */
+export function modificarPrecio(
+  db: Database.Database,
+  libroId: number,
+  nuevoPrecio: number,
+  origen: OrigenPrecio = "edición manual",
+): Libro {
+  const errores = validarPrecio(nuevoPrecio);
+  if (errores.length > 0) {
+    throw new ErrorValidacion(errores);
+  }
+
+  const libro = obtenerLibro(db, libroId);
+  if (!libro) {
+    throw new ErrorNoEncontrado(`No existe el libro con id ${libroId}.`);
+  }
+
+  const precioAnterior = libro.precio;
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE libros SET precio = ?, actualizado_en = datetime('now') WHERE id = ?",
+    ).run(nuevoPrecio, libroId);
+    db.prepare(
+      "INSERT INTO historial_precio (libro_id, precio_anterior, precio_nuevo, origen) VALUES (?, ?, ?, ?)",
+    ).run(libroId, precioAnterior, nuevoPrecio, origen);
+  });
+  tx();
+
+  return obtenerLibro(db, libroId)!;
 }
 
 /**
