@@ -103,6 +103,32 @@ export function listarLibros(db: Database.Database): Libro[] {
     .all() as Libro[];
 }
 
+/** Escapa los comodines de LIKE (`%`, `_`) y el propio escape (`\`). */
+function escaparLike(texto: string): string {
+  return texto.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/**
+ * Busca libros **activos** cuyo título o editorial contengan el texto de la
+ * consulta (RF-10). Devuelve los libros coincidentes (con su precio). La
+ * comparación es insensible a mayúsculas (LIKE de SQLite para ASCII). Una
+ * consulta vacía o en blanco devuelve una lista vacía.
+ */
+export function buscarLibros(db: Database.Database, consulta: string): Libro[] {
+  const texto = consulta.trim();
+  if (texto === "") return [];
+
+  const patron = `%${escaparLike(texto)}%`;
+  return db
+    .prepare(
+      `SELECT * FROM libros
+         WHERE archivado = 0
+           AND (titulo LIKE @patron ESCAPE '\\' OR editorial LIKE @patron ESCAPE '\\')
+         ORDER BY titulo`,
+    )
+    .all({ patron }) as Libro[];
+}
+
 /** Valida un precio: número finito > 0. Devuelve la lista de errores. */
 export function validarPrecio(precio: number): string[] {
   if (typeof precio !== "number" || !Number.isFinite(precio) || precio <= 0) {
