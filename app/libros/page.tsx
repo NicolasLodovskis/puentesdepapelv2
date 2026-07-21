@@ -1,16 +1,10 @@
 import { getDb } from "@/lib/db";
 import { listarLibros } from "@/lib/libros";
 import { FormularioAlta } from "./formulario-alta";
+import { FilaLibro } from "./fila-libro";
 
 // La página lee la base en cada request: no puede prerenderizarse estática.
 export const dynamic = "force-dynamic";
-
-function formatearPrecio(precio: number): string {
-  return precio.toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-  });
-}
 
 export default function LibrosPage() {
   const libros = listarLibros(getDb());
@@ -37,12 +31,7 @@ export default function LibrosPage() {
             </thead>
             <tbody>
               {libros.map((libro) => (
-                <tr key={libro.id}>
-                  <td>{libro.titulo}</td>
-                  <td>{libro.editorial}</td>
-                  <td>{libro.stock}</td>
-                  <td>{formatearPrecio(libro.precio)}</td>
-                </tr>
+                <FilaLibro key={libro.id} libro={libro} />
               ))}
             </tbody>
           </table>

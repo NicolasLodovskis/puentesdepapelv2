@@ -112,3 +112,39 @@ main {
   letter-spacing: 0.03em;
   color: #666;
 }
+
+.editar-inline {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.editar-inline input {
+  width: 6.5rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
+
+.editar-inline button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #1a1a1a;
+  border-radius: 5px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.editar-inline button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.error-inline {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #b00020;
+}
