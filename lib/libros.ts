@@ -69,6 +69,15 @@ export function obtenerLibro(
     | undefined;
 }
 
+/** Lista los libros activos (no archivados), del más reciente al más antiguo. */
+export function listarLibros(db: Database.Database): Libro[] {
+  return db
+    .prepare(
+      "SELECT * FROM libros WHERE archivado = 0 ORDER BY creado_en DESC, id DESC",
+    )
+    .all() as Libro[];
+}
+
 /**
  * Da de alta un libro (RF-01). Valida los datos y, si son correctos, lo
  * persiste. Lanza `ErrorValidacion` si algún dato es inválido (no persiste

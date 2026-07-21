@@ -25,3 +25,78 @@ main {
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
+
+.form-alta {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 420px;
+  margin-bottom: 2.5rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+}
+
+.form-alta label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-alta input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.form-alta button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.form-alta button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.errores {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+  color: #b00020;
+  background: #fdecec;
+  border-radius: 6px;
+}
+
+.ok {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  color: #0a6b2f;
+  background: #e7f6ec;
+  border-radius: 6px;
+}
+
+.tabla-libros {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-libros th,
+.tabla-libros td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.tabla-libros th {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #666;
+}

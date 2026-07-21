@@ -3,6 +3,7 @@ import { createDb } from "../lib/db";
 import {
   crearLibro,
   obtenerLibro,
+  listarLibros,
   validarNuevoLibro,
   ErrorValidacion,
   type NuevoLibro,
@@ -91,6 +92,30 @@ describe("crearLibro (AC-01)", () => {
       ErrorValidacion,
     );
     expect(contarLibros(db)).toBe(0);
+    db.close();
+  });
+});
+
+describe("listarLibros", () => {
+  it("lista los libros cargados", () => {
+    const db = createDb(":memory:");
+    crearLibro(db, { ...valido, titulo: "Uno" });
+    crearLibro(db, { ...valido, titulo: "Dos" });
+    const titulos = listarLibros(db).map((l) => l.titulo);
+    expect(titulos).toContain("Uno");
+    expect(titulos).toContain("Dos");
+    db.close();
+  });
+
+  it("excluye los libros archivados", () => {
+    const db = createDb(":memory:");
+    const activo = crearLibro(db, { ...valido, titulo: "Activo" });
+    const archivado = crearLibro(db, { ...valido, titulo: "Archivado" });
+    db.prepare("UPDATE libros SET archivado = 1 WHERE id = ?").run(archivado.id);
+
+    const ids = listarLibros(db).map((l) => l.id);
+    expect(ids).toContain(activo.id);
+    expect(ids).not.toContain(archivado.id);
     db.close();
   });
 });

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { crearLibro, ErrorValidacion, type NuevoLibro } from "@/lib/libros";
 
@@ -33,6 +34,7 @@ export async function altaLibroAction(
 
   try {
     const libro = crearLibro(getDb(), input);
+    revalidatePath("/libros");
     return { ok: true, id: libro.id };
   } catch (e) {
     if (e instanceof ErrorValidacion) {
