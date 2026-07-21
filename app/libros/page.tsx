@@ -27,6 +27,7 @@ export default function LibrosPage() {
                 <th>Editorial</th>
                 <th>Stock</th>
                 <th>Precio</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>

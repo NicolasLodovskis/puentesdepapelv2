@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import {
   editarPrecioAction,
   editarStockAction,
+  venderAction,
   type ResultadoEdicion,
 } from "./actions";
 import type { Libro } from "@/lib/libros";
@@ -17,6 +18,12 @@ export function FilaLibro({ libro }: { libro: Libro }) {
     ResultadoEdicion | null,
     FormData
   >(editarPrecioAction, null);
+  const [resVenta, accionVenta, pendVenta] = useActionState<
+    ResultadoEdicion | null,
+    FormData
+  >(venderAction, null);
+
+  const sinStock = libro.stock < 1;
 
   return (
     <tr>
@@ -66,6 +73,20 @@ export function FilaLibro({ libro }: { libro: Libro }) {
         {resPrecio?.ok === false && (
           <span className="error-inline" role="alert">
             {resPrecio.errores.join(" ")}
+          </span>
+        )}
+      </td>
+
+      <td>
+        <form action={accionVenta} className="editar-inline">
+          <input type="hidden" name="libroId" value={libro.id} />
+          <button type="submit" disabled={pendVenta || sinStock}>
+            {pendVenta ? "…" : "Vender"}
+          </button>
+        </form>
+        {resVenta?.ok === false && (
+          <span className="error-inline" role="alert">
+            {resVenta.errores.join(" ")}
           </span>
         )}
       </td>
