@@ -46,6 +46,9 @@ export type OrigenPrecio =
   | "actualización masiva por Excel"
   | "alta por Excel";
 
+/** Orígenes posibles de un cambio de stock (RF-13). */
+export type OrigenStock = "venta" | "edición manual" | "alta por Excel";
+
 /**
  * Valida los datos de alta (AC-01): título y editorial no vacíos, stock entero
  * ≥ 0, precio > 0. Devuelve la lista de errores (vacía si es válido).
@@ -133,6 +136,53 @@ export function modificarPrecio(
     db.prepare(
       "INSERT INTO historial_precio (libro_id, precio_anterior, precio_nuevo, origen) VALUES (?, ?, ?, ?)",
     ).run(libroId, precioAnterior, nuevoPrecio, origen);
+  });
+  tx();
+
+  return obtenerLibro(db, libroId)!;
+}
+
+/** Valida un stock: entero ≥ 0. Devuelve la lista de errores. */
+export function validarStock(stock: number): string[] {
+  if (!Number.isInteger(stock) || stock < 0) {
+    return ["El stock debe ser un número entero mayor o igual a 0."];
+  }
+  return [];
+}
+
+/**
+ * Modifica manualmente el stock de un libro (RF-03) y registra el cambio en el
+ * historial de stock (RF-13): fecha, cantidad anterior, cantidad resultante y
+ * origen. La actualización y el registro se hacen en una transacción (AC-03).
+ *
+ * Lanza `ErrorValidacion` si el stock es inválido y `ErrorNoEncontrado` si el
+ * libro no existe (en ambos casos no persiste nada).
+ */
+export function modificarStock(
+  db: Database.Database,
+  libroId: number,
+  nuevoStock: number,
+  origen: OrigenStock = "edición manual",
+): Libro {
+  const errores = validarStock(nuevoStock);
+  if (errores.length > 0) {
+    throw new ErrorValidacion(errores);
+  }
+
+  const libro = obtenerLibro(db, libroId);
+  if (!libro) {
+    throw new ErrorNoEncontrado(`No existe el libro con id ${libroId}.`);
+  }
+
+  const cantidadAnterior = libro.stock;
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE libros SET stock = ?, actualizado_en = datetime('now') WHERE id = ?",
+    ).run(nuevoStock, libroId);
+    db.prepare(
+      "INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen) VALUES (?, ?, ?, ?)",
+    ).run(libroId, cantidadAnterior, nuevoStock, origen);
   });
   tx();
 

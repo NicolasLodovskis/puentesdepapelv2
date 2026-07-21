@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import {
   crearLibro,
   modificarPrecio,
+  modificarStock,
   ErrorValidacion,
   ErrorNoEncontrado,
   type NuevoLibro,
@@ -67,6 +68,32 @@ export async function editarPrecioAction(
 
   try {
     modificarPrecio(getDb(), libroId, precio);
+    revalidatePath("/libros");
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof ErrorValidacion) {
+      return { ok: false, errores: e.errores };
+    }
+    if (e instanceof ErrorNoEncontrado) {
+      return { ok: false, errores: [e.message] };
+    }
+    throw e;
+  }
+}
+
+/**
+ * Server action de edición manual de stock (RF-03 / RF-13). Adaptador fino
+ * sobre `modificarStock`. Pensada para usarse con `useActionState`.
+ */
+export async function editarStockAction(
+  _prev: ResultadoEdicion | null,
+  formData: FormData,
+): Promise<ResultadoEdicion> {
+  const libroId = aNumero(formData.get("libroId"));
+  const stock = aNumero(formData.get("stock"));
+
+  try {
+    modificarStock(getDb(), libroId, stock);
     revalidatePath("/libros");
     return { ok: true };
   } catch (e) {
