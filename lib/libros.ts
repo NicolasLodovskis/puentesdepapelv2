@@ -40,6 +40,14 @@ export class ErrorNoEncontrado extends Error {
   }
 }
 
+/** No se puede vender: el libro no tiene stock disponible. */
+export class ErrorStockInsuficiente extends Error {
+  constructor(mensaje: string) {
+    super(mensaje);
+    this.name = "ErrorStockInsuficiente";
+  }
+}
+
 /** Orígenes posibles de un cambio de precio (RF-14). */
 export type OrigenPrecio =
   | "edición manual"
@@ -183,6 +191,46 @@ export function modificarStock(
     db.prepare(
       "INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen) VALUES (?, ?, ?, ?)",
     ).run(libroId, cantidadAnterior, nuevoStock, origen);
+  });
+  tx();
+
+  return obtenerLibro(db, libroId)!;
+}
+
+/**
+ * Marca un libro como vendido (RF-05): descuenta 1 del stock, registra la
+ * venta en el historial de ventas (fecha y precio vigente, RF-12) y registra
+ * el cambio en el historial de stock (origen "venta", RF-13). Todo en una
+ * transacción (AC-05).
+ *
+ * Lanza `ErrorNoEncontrado` si el libro no existe y `ErrorStockInsuficiente`
+ * si el stock es 0 (no descuenta ni registra nada, AC-06).
+ */
+export function marcarVendido(db: Database.Database, libroId: number): Libro {
+  const libro = obtenerLibro(db, libroId);
+  if (!libro) {
+    throw new ErrorNoEncontrado(`No existe el libro con id ${libroId}.`);
+  }
+  if (libro.stock < 1) {
+    throw new ErrorStockInsuficiente(
+      "No hay stock disponible para marcar como vendido.",
+    );
+  }
+
+  const cantidadAnterior = libro.stock;
+  const cantidadResultante = cantidadAnterior - 1;
+  const precioVenta = libro.precio;
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE libros SET stock = ?, actualizado_en = datetime('now') WHERE id = ?",
+    ).run(cantidadResultante, libroId);
+    db.prepare(
+      "INSERT INTO historial_venta (libro_id, precio_venta) VALUES (?, ?)",
+    ).run(libroId, precioVenta);
+    db.prepare(
+      "INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen) VALUES (?, ?, ?, ?)",
+    ).run(libroId, cantidadAnterior, cantidadResultante, "venta");
   });
   tx();
 

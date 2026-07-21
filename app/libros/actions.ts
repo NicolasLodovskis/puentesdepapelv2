@@ -6,8 +6,10 @@ import {
   crearLibro,
   modificarPrecio,
   modificarStock,
+  marcarVendido,
   ErrorValidacion,
   ErrorNoEncontrado,
+  ErrorStockInsuficiente,
   type NuevoLibro,
 } from "@/lib/libros";
 
@@ -101,6 +103,28 @@ export async function editarStockAction(
       return { ok: false, errores: e.errores };
     }
     if (e instanceof ErrorNoEncontrado) {
+      return { ok: false, errores: [e.message] };
+    }
+    throw e;
+  }
+}
+
+/**
+ * Server action de venta (RF-05 / RF-12 / RF-13). Adaptador fino sobre
+ * `marcarVendido`. Pensada para usarse con `useActionState`.
+ */
+export async function venderAction(
+  _prev: ResultadoEdicion | null,
+  formData: FormData,
+): Promise<ResultadoEdicion> {
+  const libroId = aNumero(formData.get("libroId"));
+
+  try {
+    marcarVendido(getDb(), libroId);
+    revalidatePath("/libros");
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof ErrorStockInsuficiente || e instanceof ErrorNoEncontrado) {
       return { ok: false, errores: [e.message] };
     }
     throw e;
