@@ -8,6 +8,7 @@ export default function Home() {
       <nav className="menu-inicio">
         <Link href="/libros/alta">Alta de libros</Link>
         <Link href="/libros">Libros</Link>
+        <Link href="/historial">Historiales</Link>
       </nav>
     </main>
   );
