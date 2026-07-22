@@ -84,3 +84,90 @@ describe("historial de ventas (AC-13: RF-12 + RF-15)", () => {
     db.close();
   });
 });
+
+describe("filtros de historial (AC-14: RF-16)", () => {
+  it("filtra por rango de fechas (inclusivo)", () => {
+    const db = createDb(":memory:");
+    const libro = crearLibro(db, base);
+    modificarPrecio(db, libro.id, 1100);
+    modificarPrecio(db, libro.id, 1200);
+
+    const ids = db
+      .prepare("SELECT id FROM historial_precio ORDER BY id")
+      .all() as Array<{ id: number }>;
+    db.prepare("UPDATE historial_precio SET fecha = ? WHERE id = ?").run(
+      "2026-01-10 10:00:00",
+      ids[0].id,
+    );
+    db.prepare("UPDATE historial_precio SET fecha = ? WHERE id = ?").run(
+      "2026-06-15 10:00:00",
+      ids[1].id,
+    );
+
+    const r = listarHistorialPrecio(db, {
+      desde: "2026-06-01",
+      hasta: "2026-06-30",
+    });
+    expect(r).toHaveLength(1);
+    expect(r[0].fecha).toBe("2026-06-15 10:00:00");
+    db.close();
+  });
+
+  it("filtra por título y por editorial", () => {
+    const db = createDb(":memory:");
+    const a = crearLibro(db, {
+      titulo: "El Aleph",
+      editorial: "Emecé",
+      stock: 1,
+      precio: 1000,
+    });
+    const b = crearLibro(db, {
+      titulo: "Rayuela",
+      editorial: "Sudamericana",
+      stock: 1,
+      precio: 1000,
+    });
+    modificarPrecio(db, a.id, 1100);
+    modificarPrecio(db, b.id, 1100);
+
+    expect(
+      listarHistorialPrecio(db, { titulo: "aleph" }).map((e) => e.titulo),
+    ).toEqual(["El Aleph"]);
+    expect(
+      listarHistorialPrecio(db, { editorial: "sudamericana" }).map(
+        (e) => e.titulo,
+      ),
+    ).toEqual(["Rayuela"]);
+    db.close();
+  });
+
+  it("combina filtros (fecha + título)", () => {
+    const db = createDb(":memory:");
+    const libro = crearLibro(db, base);
+    modificarStock(db, libro.id, 10);
+
+    const ids = db
+      .prepare("SELECT id FROM historial_stock ORDER BY id")
+      .all() as Array<{ id: number }>;
+    db.prepare("UPDATE historial_stock SET fecha = ? WHERE id = ?").run(
+      "2026-03-01 10:00:00",
+      ids[0].id,
+    );
+
+    expect(
+      listarHistorialStock(db, {
+        desde: "2026-02-01",
+        hasta: "2026-03-31",
+        titulo: "aleph",
+      }),
+    ).toHaveLength(1);
+    expect(
+      listarHistorialStock(db, {
+        desde: "2026-04-01",
+        hasta: "2026-04-30",
+        titulo: "aleph",
+      }),
+    ).toHaveLength(0);
+    db.close();
+  });
+});
