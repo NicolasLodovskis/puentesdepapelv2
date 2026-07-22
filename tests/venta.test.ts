@@ -52,6 +52,25 @@ describe("marcarVendido (AC-05: RF-05 + RF-12 + RF-13)", () => {
     db.close();
   });
 
+  it("guarda la fecha de la venta en UTC-3 (no en UTC)", () => {
+    const db = createDb(":memory:");
+    const libro = crearLibro(db, base);
+
+    const antes = (
+      db.prepare("SELECT datetime('now','-3 hours') t").get() as { t: string }
+    ).t;
+    marcarVendido(db, libro.id);
+    const despues = (
+      db.prepare("SELECT datetime('now','-3 hours') t").get() as { t: string }
+    ).t;
+
+    const fecha = ventas(db, libro.id)[0].fecha;
+    // La fecha guardada cae en la ventana UTC-3; si fuera UTC estaría ~3h
+    // adelantada y quedaría fuera del rango.
+    expect(fecha >= antes && fecha <= despues).toBe(true);
+    db.close();
+  });
+
   it("registra el precio vigente aunque haya cambiado antes de la venta", () => {
     const db = createDb(":memory:");
     const libro = crearLibro(db, { ...base, precio: 1000 });

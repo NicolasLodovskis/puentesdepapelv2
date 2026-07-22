@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { SQL_AHORA_UTC3 } from "./tiempo";
 
 /** Datos para dar de alta un libro (RF-01). `foto` es opcional. */
 export type NuevoLibro = {
@@ -173,10 +174,10 @@ export function modificarPrecio(
 
   const tx = db.transaction(() => {
     db.prepare(
-      "UPDATE libros SET precio = ?, actualizado_en = datetime('now') WHERE id = ?",
+      `UPDATE libros SET precio = ?, actualizado_en = ${SQL_AHORA_UTC3} WHERE id = ?`,
     ).run(nuevoPrecio, libroId);
     db.prepare(
-      "INSERT INTO historial_precio (libro_id, precio_anterior, precio_nuevo, origen) VALUES (?, ?, ?, ?)",
+      `INSERT INTO historial_precio (libro_id, precio_anterior, precio_nuevo, origen, fecha) VALUES (?, ?, ?, ?, ${SQL_AHORA_UTC3})`,
     ).run(libroId, precioAnterior, nuevoPrecio, origen);
   });
   tx();
@@ -220,10 +221,10 @@ export function modificarStock(
 
   const tx = db.transaction(() => {
     db.prepare(
-      "UPDATE libros SET stock = ?, actualizado_en = datetime('now') WHERE id = ?",
+      `UPDATE libros SET stock = ?, actualizado_en = ${SQL_AHORA_UTC3} WHERE id = ?`,
     ).run(nuevoStock, libroId);
     db.prepare(
-      "INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen) VALUES (?, ?, ?, ?)",
+      `INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen, fecha) VALUES (?, ?, ?, ?, ${SQL_AHORA_UTC3})`,
     ).run(libroId, cantidadAnterior, nuevoStock, origen);
   });
   tx();
@@ -257,13 +258,13 @@ export function marcarVendido(db: Database.Database, libroId: number): Libro {
 
   const tx = db.transaction(() => {
     db.prepare(
-      "UPDATE libros SET stock = ?, actualizado_en = datetime('now') WHERE id = ?",
+      `UPDATE libros SET stock = ?, actualizado_en = ${SQL_AHORA_UTC3} WHERE id = ?`,
     ).run(cantidadResultante, libroId);
     db.prepare(
-      "INSERT INTO historial_venta (libro_id, precio_venta) VALUES (?, ?)",
+      `INSERT INTO historial_venta (libro_id, precio_venta, fecha) VALUES (?, ?, ${SQL_AHORA_UTC3})`,
     ).run(libroId, precioVenta);
     db.prepare(
-      "INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen) VALUES (?, ?, ?, ?)",
+      `INSERT INTO historial_stock (libro_id, cantidad_anterior, cantidad_resultante, origen, fecha) VALUES (?, ?, ?, ?, ${SQL_AHORA_UTC3})`,
     ).run(libroId, cantidadAnterior, cantidadResultante, "venta");
   });
   tx();
@@ -288,7 +289,8 @@ export function crearLibro(db: Database.Database, input: NuevoLibro): Libro {
 
   const info = db
     .prepare(
-      "INSERT INTO libros (titulo, editorial, foto, stock, precio) VALUES (?, ?, ?, ?, ?)",
+      `INSERT INTO libros (titulo, editorial, foto, stock, precio, creado_en, actualizado_en)
+       VALUES (?, ?, ?, ?, ?, ${SQL_AHORA_UTC3}, ${SQL_AHORA_UTC3})`,
     )
     .run(titulo, editorial, foto, input.stock, input.precio);
 

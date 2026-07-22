@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { SQL_AHORA_UTC3 } from "./tiempo";
 
 /**
  * Crea las tablas de la base si no existen. Idempotente: se puede llamar en
@@ -10,7 +11,8 @@ import type Database from "better-sqlite3";
  *  - `historial_precio` (RF-14), `historial_stock` (RF-13) e
  *    `historial_venta` (RF-12): trazabilidad de cada cambio.
  *
- * Fechas: TEXT en formato ISO-8601 UTC (`datetime('now')` por defecto).
+ * Fechas: TEXT en formato `YYYY-MM-DD HH:MM:SS` en UTC-3 (hora de Argentina),
+ * por defecto vía `SQL_AHORA_UTC3`.
  * Los CHECK de `origen` incluyen también los valores de los flujos de Excel
  * (fuera de alcance) para dejar el esquema alineado al PRD y evitar migrar.
  */
@@ -29,8 +31,8 @@ export function initSchema(db: Database.Database): void {
       stock          INTEGER NOT NULL CHECK (stock >= 0),
       precio         REAL    NOT NULL CHECK (precio > 0),
       archivado      INTEGER NOT NULL DEFAULT 0 CHECK (archivado IN (0, 1)),
-      creado_en      TEXT    NOT NULL DEFAULT (datetime('now')),
-      actualizado_en TEXT    NOT NULL DEFAULT (datetime('now'))
+      creado_en      TEXT    NOT NULL DEFAULT (${SQL_AHORA_UTC3}),
+      actualizado_en TEXT    NOT NULL DEFAULT (${SQL_AHORA_UTC3})
     );
 
     CREATE INDEX IF NOT EXISTS idx_libros_titulo    ON libros (titulo);
@@ -48,7 +50,7 @@ export function initSchema(db: Database.Database): void {
                           'alta por Excel'
                         )
                       ),
-      fecha           TEXT    NOT NULL DEFAULT (datetime('now'))
+      fecha           TEXT    NOT NULL DEFAULT (${SQL_AHORA_UTC3})
     );
 
     CREATE INDEX IF NOT EXISTS idx_historial_precio_libro ON historial_precio (libro_id);
@@ -66,7 +68,7 @@ export function initSchema(db: Database.Database): void {
                               'alta por Excel'
                             )
                           ),
-      fecha               TEXT    NOT NULL DEFAULT (datetime('now'))
+      fecha               TEXT    NOT NULL DEFAULT (${SQL_AHORA_UTC3})
     );
 
     CREATE INDEX IF NOT EXISTS idx_historial_stock_libro ON historial_stock (libro_id);
@@ -76,7 +78,7 @@ export function initSchema(db: Database.Database): void {
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       libro_id     INTEGER NOT NULL REFERENCES libros (id),
       precio_venta REAL    NOT NULL,
-      fecha        TEXT    NOT NULL DEFAULT (datetime('now'))
+      fecha        TEXT    NOT NULL DEFAULT (${SQL_AHORA_UTC3})
     );
 
     CREATE INDEX IF NOT EXISTS idx_historial_venta_libro ON historial_venta (libro_id);
