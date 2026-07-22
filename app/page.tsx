@@ -5,9 +5,10 @@ export default function Home() {
     <main>
       <h1>Puentes de Papel</h1>
       <p>Manejo de Stock.</p>
-      <p>
-        <Link href="/libros">Ir a Libros →</Link>
-      </p>
+      <nav className="menu-inicio">
+        <Link href="/libros/alta">Alta de libros</Link>
+        <Link href="/libros">Libros</Link>
+      </nav>
     </main>
   );
 }

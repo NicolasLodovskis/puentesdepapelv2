@@ -1,24 +1,55 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { listarLibros } from "@/lib/libros";
-import { FormularioAlta } from "./formulario-alta";
+import { buscarLibros } from "@/lib/libros";
 import { FilaLibro } from "./fila-libro";
 
 // La página lee la base en cada request: no puede prerenderizarse estática.
 export const dynamic = "force-dynamic";
 
-export default function LibrosPage() {
-  const libros = listarLibros(getDb());
+export default async function LibrosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const consulta = (q ?? "").trim();
+  // Consulta vacía → todos los libros (ordenados alfabéticamente).
+  const libros = buscarLibros(getDb(), consulta);
 
   return (
     <main>
+      <p>
+        <Link href="/" className="boton-volver">
+          ← Volver al inicio
+        </Link>
+      </p>
+
       <h1>Libros</h1>
 
-      <FormularioAlta />
+      <form action="/libros" method="get" className="barra-busqueda">
+        <input
+          name="q"
+          type="search"
+          placeholder="Buscar por título o editorial…"
+          defaultValue={consulta}
+          aria-label="Buscar por título o editorial"
+        />
+        <button type="submit">Buscar</button>
+      </form>
 
       <section>
-        <h2>Listado ({libros.length})</h2>
+        <h2>
+          {consulta === ""
+            ? `Todos los libros (${libros.length})`
+            : `Resultados (${libros.length})`}
+        </h2>
+
         {libros.length === 0 ? (
-          <p>Todavía no hay libros cargados.</p>
+          <p>
+            {consulta === ""
+              ? "Todavía no hay libros cargados."
+              : `No se encontraron libros para «${consulta}».`}
+          </p>
         ) : (
           <table className="tabla-libros">
             <thead>

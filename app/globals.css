@@ -148,3 +148,91 @@ main {
   font-size: 0.8rem;
   color: #b00020;
 }
+
+.boton-volver {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #1a1a1a;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.boton-volver:hover {
+  background: #f2f2f2;
+}
+
+.menu-inicio {
+  display: flex;
+  gap: 1rem;
+}
+
+.menu-inicio a {
+  padding: 0.5rem 1rem;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.menu-inicio a:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.barra-busqueda {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 480px;
+  margin-bottom: 1.5rem;
+}
+
+.barra-busqueda input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.barra-busqueda button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.confirmacion {
+  max-width: 420px;
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: #e7f6ec;
+  border: 1px solid #b6e0c4;
+  border-radius: 8px;
+}
+
+.confirmacion-titulo {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: #0a6b2f;
+}
+
+.confirmacion-datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.confirmacion-datos dt {
+  font-weight: 600;
+  color: #444;
+}
+
+.confirmacion-datos dd {
+  margin: 0;
+}

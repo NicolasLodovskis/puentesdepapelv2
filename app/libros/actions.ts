@@ -11,10 +11,11 @@ import {
   ErrorNoEncontrado,
   ErrorStockInsuficiente,
   type NuevoLibro,
+  type Libro,
 } from "@/lib/libros";
 
 export type ResultadoAlta =
-  | { ok: true; id: number }
+  | { ok: true; libro: Libro }
   | { ok: false; errores: string[] };
 
 export type ResultadoEdicion =
@@ -48,7 +49,7 @@ export async function altaLibroAction(
   try {
     const libro = crearLibro(getDb(), input);
     revalidatePath("/libros");
-    return { ok: true, id: libro.id };
+    return { ok: true, libro };
   } catch (e) {
     if (e instanceof ErrorValidacion) {
       return { ok: false, errores: e.errores };

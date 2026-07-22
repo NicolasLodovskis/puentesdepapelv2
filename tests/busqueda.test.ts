@@ -36,11 +36,37 @@ describe("buscarLibros (AC-11: RF-10)", () => {
     db.close();
   });
 
-  it("devuelve vacío con consulta vacía o en blanco", () => {
+  it("con consulta vacía o en blanco trae todos los libros ordenados alfabéticamente", () => {
     const db = createDb(":memory:");
     sembrar(db);
-    expect(buscarLibros(db, "")).toEqual([]);
-    expect(buscarLibros(db, "   ")).toEqual([]);
+    expect(buscarLibros(db, "").map((l) => l.titulo)).toEqual([
+      "El Aleph",
+      "Ficciones",
+      "Rayuela",
+    ]);
+    expect(buscarLibros(db, "   ").map((l) => l.titulo)).toEqual([
+      "El Aleph",
+      "Ficciones",
+      "Rayuela",
+    ]);
+    db.close();
+  });
+
+  it("con consulta vacía excluye los libros archivados", () => {
+    const db = createDb(":memory:");
+    sembrar(db);
+    const archivado = crearLibro(db, {
+      titulo: "AAA Archivado",
+      editorial: "Ed",
+      stock: 1,
+      precio: 500,
+    });
+    db.prepare("UPDATE libros SET archivado = 1 WHERE id = ?").run(archivado.id);
+    expect(buscarLibros(db, "").map((l) => l.titulo)).toEqual([
+      "El Aleph",
+      "Ficciones",
+      "Rayuela",
+    ]);
     db.close();
   });
 

@@ -110,13 +110,21 @@ function escaparLike(texto: string): string {
 
 /**
  * Busca libros **activos** cuyo título o editorial contengan el texto de la
- * consulta (RF-10). Devuelve los libros coincidentes (con su precio). La
+ * consulta (RF-10). Devuelve los libros coincidentes (con su precio),
+ * ordenados alfabéticamente por título (insensible a mayúsculas). La
  * comparación es insensible a mayúsculas (LIKE de SQLite para ASCII). Una
- * consulta vacía o en blanco devuelve una lista vacía.
+ * consulta vacía o en blanco devuelve **todos** los libros activos.
  */
 export function buscarLibros(db: Database.Database, consulta: string): Libro[] {
   const texto = consulta.trim();
-  if (texto === "") return [];
+
+  if (texto === "") {
+    return db
+      .prepare(
+        "SELECT * FROM libros WHERE archivado = 0 ORDER BY titulo COLLATE NOCASE",
+      )
+      .all() as Libro[];
+  }
 
   const patron = `%${escaparLike(texto)}%`;
   return db
@@ -124,7 +132,7 @@ export function buscarLibros(db: Database.Database, consulta: string): Libro[] {
       `SELECT * FROM libros
          WHERE archivado = 0
            AND (titulo LIKE @patron ESCAPE '\\' OR editorial LIKE @patron ESCAPE '\\')
-         ORDER BY titulo`,
+         ORDER BY titulo COLLATE NOCASE`,
     )
     .all({ patron }) as Libro[];
 }
